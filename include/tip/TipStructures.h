@@ -48,7 +48,7 @@ namespace td::tip {
 
 		std::uint32_t Length;	 ///< Length of this image, including the size of image data.
 		std::uint16_t Index;	 ///< The index of this image. Seems to be used for self-referential stuff.
-		std::uint8_t ImageFlags; ///< Image flags. See TipImageHdr::IMAGEFLAG_* for all applicable flags
+		std::uint8_t ImageFlags; ///< RgbaImage flags. See TipImageHdr::IMAGEFLAG_* for all applicable flags
 
 		std::uint8_t IsFastPath; ///< Code takes a diff path if this == 1? Unknown what this really does
 

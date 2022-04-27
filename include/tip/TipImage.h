@@ -26,22 +26,26 @@ namespace td::tip {
 	};
 
 	/**
+	 * A RGBA color.
+	 */
+	union RgbaColor {
+		std::uint32_t u32 { 0x000000ff }; // R=0, G=0, B=0, A=255
+		struct {
+			std::uint8_t r;
+			std::uint8_t g;
+			std::uint8_t b;
+			std::uint8_t a;
+		};
+	};
+
+	/**
 	 * A generic RGBA image.
 	 */
-	struct Image {
-		union Rgba {
-			std::uint32_t u32 { 0x000000ff }; // R=0, G=0, B=0, A=255
-			struct {
-				std::uint8_t r;
-				std::uint8_t g;
-				std::uint8_t b;
-				std::uint8_t a;
-			};
-		};
+	struct RgbaImage {
 
 		// we should store ps1 vram x/y?
 		ImageSize size;
-		std::vector<Rgba> pixels;
+		std::vector<RgbaColor> pixels;
 	};
 
 	struct TipImage {
@@ -61,23 +65,28 @@ namespace td::tip {
 		/**
 		 * Convert this image to a RGBA8888 image.
 		 *
-		 * \return a Image containing a plain-format RGBA8888 bitmap.
+		 * \return a RgbaImage containing a plain-format RGBA8888 bitmap.
 		 */
-		Image ToRgba() const;
+		RgbaImage ToRgba() const;
 
 		/**
 		 * Get the palette of this image, as an array of RGBA8888 colors.
-		 * This doesn't change, so you shouldn't keep calling it in a hot path.
+		 * This won't ever change, so you shouldn't keep calling it in a hot path.
 		 * If you do, expect sad performance.
 		 *
 		 * \return a 1D palette array.
 		 */
-		std::vector<Image::Rgba> Palette() const;
+		std::vector<RgbaColor> Palette() const;
 
 		/**
-		 * Image index.
+		 * RgbaImage index.
 		 */
 		uint16_t Index() const;
+
+		/**
+		 * Get the raw image header.
+		 */
+		const TipImageHdr& Header() const;
 
 	   private:
 		TipImageHdr imageHeader;

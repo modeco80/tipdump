@@ -13,11 +13,11 @@
 namespace td::tip {
 
 	bool TipImage::ReadFromStream(std::istream& is) {
-		// Image header
+		// RgbaImage header
 		if(!MaybeRead(is, imageHeader))
 			return false;
 
-		// Image data
+		// RgbaImage data
 		imageBytes.resize(imageHeader.ImageDataSize());
 		if(!is.read(reinterpret_cast<char*>(&imageBytes[0]), imageHeader.ImageDataSize()))
 			return false;
@@ -50,8 +50,8 @@ namespace td::tip {
 		};
 	}
 
-	Image TipImage::ToRgba() const {
-		Image img;
+	RgbaImage TipImage::ToRgba() const {
+		RgbaImage img;
 		auto size = Size();
 		auto pal = Palette();
 
@@ -79,8 +79,8 @@ namespace td::tip {
 		return img;
 	}
 
-	std::vector<Image::Rgba> TipImage::Palette() const {
-		std::vector<Image::Rgba> res(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP ? 255 : 16);
+	std::vector<RgbaColor> TipImage::Palette() const {
+		std::vector<RgbaColor> res(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP ? 255 : 16);
 
 		std::size_t i = 0;
 
@@ -117,5 +117,9 @@ namespace td::tip {
 
 	uint16_t TipImage::Index() const {
 		return imageHeader.Index;
+	}
+
+	const TipImageHdr& TipImage::Header() const {
+		return imageHeader;
 	}
 } // namespace td::tip
