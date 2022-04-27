@@ -44,7 +44,7 @@ namespace td::tip {
 		/**
 		 * Peek at all images.
 		 */
-		const std::vector<TipImage>& GetImages();
+		std::vector<TipImage>& GetImages();
 
 		const TipFileHdr& GetHeader() const;
 

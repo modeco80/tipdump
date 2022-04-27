@@ -67,16 +67,17 @@ namespace td::tip {
 		 *
 		 * \return a RgbaImage containing a plain-format RGBA8888 bitmap.
 		 */
-		RgbaImage ToRgba() const;
+		RgbaImage ToRgba();
 
 		/**
 		 * Get the palette of this image, as an array of RGBA8888 colors.
-		 * This won't ever change, so you shouldn't keep calling it in a hot path.
-		 * If you do, expect sad performance.
+		 *
+		 * This is only computed once, so calling it more than once will
+		 * return immediately without doing work.
 		 *
 		 * \return a 1D palette array.
 		 */
-		std::vector<RgbaColor> Palette() const;
+		const std::vector<RgbaColor>& Palette();
 
 		/**
 		 * RgbaImage index.
@@ -94,6 +95,9 @@ namespace td::tip {
 
 		std::vector<std::uint8_t> imageBytes;
 		std::vector<std::uint8_t> clutBytes;
+
+		std::vector<RgbaColor> palette;
+		bool paletteComputed{false};
 	};
 
 } // namespace td::tip

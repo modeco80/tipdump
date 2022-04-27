@@ -35,7 +35,7 @@ namespace td::tip {
 		return TipReadError::NoError;
 	}
 
-	const std::vector<TipImage>& TipFile::GetImages() {
+	std::vector<TipImage>& TipFile::GetImages() {
 		return images;
 	}
 

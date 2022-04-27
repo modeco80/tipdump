@@ -50,10 +50,10 @@ namespace td::tip {
 		};
 	}
 
-	RgbaImage TipImage::ToRgba() const {
+	RgbaImage TipImage::ToRgba() {
 		RgbaImage img;
 		auto size = Size();
-		auto pal = Palette();
+		auto& pal = Palette();
 
 		// Setup the image properly
 		img.size = size;
@@ -79,40 +79,45 @@ namespace td::tip {
 		return img;
 	}
 
-	std::vector<RgbaColor> TipImage::Palette() const {
-		std::vector<RgbaColor> res(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP ? 255 : 16);
+	const std::vector<RgbaColor>& TipImage::Palette() {
+		// Lazily compute if we haven't computed the palette.
 
-		std::size_t i = 0;
+		if(!paletteComputed) {
+			palette.resize(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP ? 255 : 16);
 
-		// std::cout << "clut's at " << clutHeader.ImageRect.x << 'x' << clutHeader.ImageRect.y << '\n';
+			std::size_t i = 0;
 
-		for(auto& color : res) {
-			std::uint16_t total = (clutBytes[i + 1] << 8) | clutBytes[i];
+			// std::cout << "clut's at " << clutHeader.ImageRect.x << 'x' << clutHeader.ImageRect.y << '\n';
 
-			// PS1 GPU considers all black (0x0000) completely transparent.
-			if(total == 0x0000)
-				color.a = 0;
-			else
-				// This is where things potentionally get a bit more complicated.
-				//
-				// In theory we would need to test for the semi-transparent bit
-				// (see https://psx-spx.consoledev.net/graphicsprocessingunitgpu/#texture-bitmaps and
-				// https://psx-spx.consoledev.net/graphicsprocessingunitgpu/#texture-palettes-clut-color-lookup-table)
-				//
-				// but that doesn't seem like it matters too much (and any attempt to
-				// test for it breaks all other images, so for now we don't).
-				color.a = 255;
+			for(auto& color : palette) {
+				std::uint16_t total = (clutBytes[i + 1] << 8) | clutBytes[i];
 
-			color.b = (total & 0x7C00) >> 7;
-			color.g = (total & 0x03E0) >> 2;
-			color.r = (total & 0x001F) << 3;
+				// PS1 GPU considers all black (0x0000) completely transparent.
+				if(total == 0x0000)
+					color.a = 0;
+				else
+					// This is where things potentionally get a bit more complicated.
+					//
+					// In theory we would need to test for the semi-transparent bit
+					// (see https://psx-spx.consoledev.net/graphicsprocessingunitgpu/#texture-bitmaps and
+					// https://psx-spx.consoledev.net/graphicsprocessingunitgpu/#texture-palettes-clut-color-lookup-table)
+					//
+					// but that doesn't seem like it matters too much (and any attempt to
+					// test for it breaks all other images, so for now we don't).
+					color.a = 255;
 
-			// std::cout << "color " << i / 2 << ": " << (int)color.r << ',' << (int)color.g << ',' << (int)color.b << '\n';
+				color.b = (total & 0x7C00) >> 7;
+				color.g = (total & 0x03E0) >> 2;
+				color.r = (total & 0x001F) << 3;
 
-			i += sizeof(std::uint16_t); // The color is 16 bits, 2 bytes per color.
+				// std::cout << "color " << i / 2 << ": " << (int)color.r << ',' << (int)color.g << ',' << (int)color.b << '\n';
+
+				i += sizeof(std::uint16_t); // The color is 16 bits, 2 bytes per color.
+			}
 		}
 
-		return res;
+		// Otherwise we can return a const ref to the palette right away!
+		return palette;
 	}
 
 	uint16_t TipImage::Index() const {
