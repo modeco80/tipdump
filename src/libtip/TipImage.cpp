@@ -38,6 +38,17 @@ namespace td::tip {
 		return true;
 	}
 
+	void TipImage::Clear() {
+		if(paletteComputed)
+			palette.clear();
+
+		if(!imageBytes.empty())
+			imageBytes.clear();
+
+		if(!clutBytes.empty())
+			clutBytes.clear();
+	}
+
 	ImageSize TipImage::Size() const {
 		return {
 			// For some reason, depending on the BPP of the image, width needs to be multiplied by:
@@ -51,29 +62,19 @@ namespace td::tip {
 	}
 
 	RgbaImage TipImage::ToRgba() {
-		RgbaImage img;
 		auto size = Size();
-		auto& pal = Palette();
-
-		// Setup the image properly
-		img.size = size;
-		img.pixels.resize(size.width * size.height);
-
-		auto* imagePtr = img.pixels.data();
+		auto* pal = Palette().data();
+		RgbaImage img(size);
+		auto* buffer = img.GetBuffer();
 
 		if(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP) {
 			for(uint32_t i = 0; i < size.width * size.height; ++i)
-				*(imagePtr++) = pal[imageBytes[i]];
+				*(buffer++) = pal[imageBytes[i]];
 		} else {
 			// Sample as 4bpp.
-			for(uint32_t i = 0; i < (size.width * size.height / 2); ++i) {
-				auto bt = imageBytes[i];
-
-				for(int b = 0; b < 2; b++) {
-					auto t = (uint16_t)((bt & (0x0F << (b * 4))) >> (b * 4));
-					*(imagePtr++) = pal[t];
-				}
-			}
+			for(uint32_t i = 0; i < (size.width * size.height / 2); ++i)
+				for(int b = 0; b < 2; b++)
+					*(buffer++) = pal[static_cast<std::uint16_t>(((imageBytes[i] & (0x0F << (b * 4))) >> (b * 4)))];
 		}
 
 		return img;
@@ -83,7 +84,7 @@ namespace td::tip {
 		// Lazily compute if we haven't computed the palette.
 
 		if(!paletteComputed) {
-			palette.resize(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP ? 255 : 16);
+			palette.resize(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP ? 256 : 16);
 
 			std::size_t i = 0;
 
@@ -114,6 +115,8 @@ namespace td::tip {
 
 				i += sizeof(std::uint16_t); // The color is 16 bits, 2 bytes per color.
 			}
+
+			paletteComputed = true;
 		}
 
 		// Otherwise we can return a const ref to the palette right away!

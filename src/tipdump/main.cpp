@@ -118,6 +118,10 @@ int main(int argc, char** argv) {
 	for(auto& image : file.GetImages()) {
 		auto rgba = image.ToRgba();
 
+		// Free the TIP image resources, since we don't need it after it's been converted to an
+		// RGBA image.
+		image.Clear();
+
 		auto outName = (outputDir / CheapFormat("%d.png", image.Index() / 2));
 
 		// Write out some statistic information
@@ -135,7 +139,11 @@ int main(int argc, char** argv) {
 
 		std::cout << "Writing image " << image.Index() / 2 << " to path " << std::quoted(outName.string()) << '\n';
 
-		stbi_write_png(outName.c_str(), rgba.size.width, rgba.size.height, 4, rgba.pixels.data(), rgba.size.width * 4);
+		stbi_write_png(outName.c_str(), rgba.GetSize().width, rgba.GetSize().height, 4, rgba.GetBuffer(), rgba.GetStride());
+
+		// Free resources of the RGBA image
+		// once we're done writing this image.
+		rgba.Clear();
 	}
 
 	return 0;

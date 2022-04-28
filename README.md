@@ -2,8 +2,7 @@
 
 A texture dumper for the Namco Museum PS1 games (more specifically, the `.tip` files). Written in C++20, as per usual.
 
-Also provides a standalone library for reading .TIP files (td::tip).
-
+Also provides a standalone library for reading .TIP files (td::tip/libtip).
 
 ## Usage
 
@@ -30,6 +29,6 @@ Profit?
 
 ## Known issues
 
-- Vol. 1 `MUSEUM/LOB.TIP` fails to extract properly
+- Vol. 1 `MUSEUM/LOB.TIP` and some stuff in `/DISPLAY` is wonky with libtip
 
-  This is due to the CLUT order being very screwy in particularly THIS TIP file only, and the first image not even having a CLUT in the first place..
+  This is due to the CLUT order being very screwy in particularly those TIP file only, and the first image not even having a CLUT in the first place..

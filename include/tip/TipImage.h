@@ -10,6 +10,7 @@
 #define TIPDUMP_TIPIMAGE_H
 
 #include <tip/TipStructures.h>
+#include <tip/RgbaImage.h>
 
 #include <cstdint>
 #include <iosfwd>
@@ -17,36 +18,7 @@
 
 namespace td::tip {
 
-	/**
-	 * Simple image size structure.
-	 */
-	struct ImageSize {
-		std::uint16_t width {};
-		std::uint16_t height {};
-	};
 
-	/**
-	 * A RGBA color.
-	 */
-	union RgbaColor {
-		std::uint32_t u32 { 0x000000ff }; // R=0, G=0, B=0, A=255
-		struct {
-			std::uint8_t r;
-			std::uint8_t g;
-			std::uint8_t b;
-			std::uint8_t a;
-		};
-	};
-
-	/**
-	 * A generic RGBA image.
-	 */
-	struct RgbaImage {
-
-		// we should store ps1 vram x/y?
-		ImageSize size;
-		std::vector<RgbaColor> pixels;
-	};
 
 	struct TipImage {
 		/**
@@ -56,6 +28,11 @@ namespace td::tip {
 		 * \return True on success; false otherwise.
 		 */
 		bool ReadFromStream(std::istream& is);
+
+		/**
+		 * Free this image's resources.
+		 */
+		void Clear();
 
 		/**
 		 * Get this image's size.
@@ -94,6 +71,7 @@ namespace td::tip {
 		 */
 		bool Is8Bpp() const;
 
+
 	   private:
 		TipImageHdr imageHeader;
 		TipImageHdr clutHeader;
@@ -101,7 +79,7 @@ namespace td::tip {
 		std::vector<std::uint8_t> imageBytes;
 		std::vector<std::uint8_t> clutBytes;
 
-		std::vector<RgbaColor> palette;
+		std::vector<RgbaColor> palette; // TODO: use a 256/16*1 RgbaImage?
 		bool paletteComputed{false};
 	};
 

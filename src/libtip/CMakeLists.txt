@@ -1,6 +1,8 @@
 
 
 add_library(td2_tip
+		RgbaImage.cpp
+
 		TipFile.cpp
 		TipImage.cpp
 		)
