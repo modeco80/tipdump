@@ -127,4 +127,9 @@ namespace td::tip {
 	const TipImageHdr& TipImage::Header() const {
 		return imageHeader;
 	}
+
+	bool TipImage::Is8Bpp() const {
+		return imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP;
+	}
+
 } // namespace td::tip

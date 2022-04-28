@@ -89,6 +89,11 @@ namespace td::tip {
 		 */
 		const TipImageHdr& Header() const;
 
+		/**
+		 * Get whether this image is 8bpp or not.
+		 */
+		bool Is8Bpp() const;
+
 	   private:
 		TipImageHdr imageHeader;
 		TipImageHdr clutHeader;

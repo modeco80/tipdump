@@ -124,11 +124,10 @@ int main(int argc, char** argv) {
 		{
 			auto& header = image.Header();
 			auto rect = image.Size();
-			const bool is8bpp =  header.ImageFlags & td::tip::TipImageHdr::IMAGEFLAG_8BPP;
-			const auto clutLen = is8bpp ? 255 * sizeof(std::uint16_t) : 16 * sizeof(std::uint16_t);
+			const auto clutLen = image.Is8Bpp()  ? 255 * sizeof(std::uint16_t) : 16 * sizeof(std::uint16_t);
 
 			statFile << CheapFormat("Image #%d:\n", image.Index() / 2);
-			statFile << CheapFormat("    Bitdepth: %s\n", is8bpp ? "8bpp" : "4bpp" );
+			statFile << CheapFormat("    Bitdepth: %s\n", image.Is8Bpp() ? "8bpp" : "4bpp" );
 			statFile << CheapFormat("    VRAM Rect: %dx%d (at %dx%d)\n", rect.width, rect.height, header.ImageRect.x, header.ImageRect.y);
 			statFile << CheapFormat("    Data size: %u (0x%08x hex)\n", header.ImageDataSize(), header.ImageDataSize());
 			statFile << CheapFormat("    CLUT data size: %u (0x%08x hex)\n\n", clutLen, clutLen);
