@@ -16,14 +16,13 @@ namespace td::tip {
 		if(!MaybeRead(is, header))
 			return TipReadError::FailureReadingHeader;
 
-		// Do magic checks
+		// Do magic check(s).
 		if(header.Magic[0] != 'T' && header.Magic[1] != 'I' && header.Magic[2] == 'P')
-			if(header.Magic[3] != '0' || header.Magic[3] != '1') {
-				//std::cout << "not tip\n";
+			if(header.Magic[3] != '0' || header.Magic[3] != '1')
 				return TipReadError::NotTip;
-			}
 
-		for(int i = 0; i < header.ImageCount / 2; ++i) {
+		// Read images.
+		for(std::size_t i = 0; i < header.ImageCount / 2; ++i) {
 			TipImage image;
 
 			if(!image.ReadFromStream(is))

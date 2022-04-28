@@ -68,12 +68,12 @@ namespace td::tip {
 		auto* buffer = img.GetBuffer();
 
 		if(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP) {
-			for(uint32_t i = 0; i < size.width * size.height; ++i)
+			for(std::size_t i = 0; i < size.width * size.height; ++i)
 				*(buffer++) = pal[imageBytes[i]];
 		} else {
 			// Sample as 4bpp.
-			for(uint32_t i = 0; i < (size.width * size.height / 2); ++i)
-				for(int b = 0; b < 2; b++)
+			for(std::size_t i = 0; i < (size.width * size.height / 2); ++i)
+				for(std::size_t b = 0; b < 2; b++)
 					*(buffer++) = pal[static_cast<std::uint16_t>(((imageBytes[i] & (0x0F << (b * 4))) >> (b * 4)))];
 		}
 
