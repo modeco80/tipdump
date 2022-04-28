@@ -17,6 +17,10 @@ namespace td::tip {
 	}
 
 	void RgbaImage::Resize(ImageSize sz) {
+		// Clear any remaining image.
+		if(!pixels.empty())
+			Clear();
+
 		pixels.resize(sz.width * sz.height);
 		size = sz;
 	}
@@ -24,7 +28,7 @@ namespace td::tip {
 	void RgbaImage::Clear() {
 		if(!pixels.empty()) {
 			pixels.clear();
-			size = {0, 0};
+			size = { 0, 0 };
 		}
 	}
 
@@ -50,4 +54,4 @@ namespace td::tip {
 		return size;
 	}
 
-}
+} // namespace td::tip

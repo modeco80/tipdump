@@ -41,22 +41,48 @@ namespace td::tip {
 	 * A standard RGBA8888 image.
 	 */
 	struct RgbaImage {
-		// we should store ps1 vram x/y?
-
 		RgbaImage();
 
+		/**
+		 * Constructor taking in an image size.
+		 * Shorthand for Resize(size).
+		 * \see RgbaImage::Resize
+		 */
 		explicit RgbaImage(ImageSize size);
 
+		/**
+		 * Resize this image.
+		 * \param[in] size Size to resize to.
+		 */
 		void Resize(ImageSize size);
 
+		/**
+		 * Clear this image, freeing its buffer.
+		 */
 		void Clear();
 
+		/**
+		 * Get access to this image's data buffer (const version).
+		 * \return A const pointer to the image buffer.
+		 */
 		[[nodiscard]] const RgbaColor* GetBuffer() const;
 
+		/**
+		 * Get access to this image's data buffer for writing
+		 * \return A pointer to the image buffer.
+		 */
 		[[nodiscard]] RgbaColor* GetBuffer();
 
+		/**
+		 * Get the stride of this image.
+		 * \return The stride.
+		 */
 		[[nodiscard]] std::size_t GetStride() const;
 
+		/**
+		 * Get the size of this image.
+		 * \return The size.
+		 */
 		[[nodiscard]] ImageSize GetSize() const;
 
 	   private:
