@@ -139,6 +139,8 @@ int main(int argc, char** argv) {
 
 		std::cout << "Writing image " << image.Index() / 2 << " to path " << std::quoted(outName.string()) << '\n';
 
+		// FIXME: Add to libpixel interface.
+
 		stbi_write_png(outName.c_str(), rgba.GetSize().width, rgba.GetSize().height, 4, rgba.GetBuffer(), rgba.GetStride());
 	}
 

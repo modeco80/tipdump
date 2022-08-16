@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 //
 
-#include <tip/RgbaImage.h>
+#include <pixel/RgbaImage.h>
 
-namespace td::tip {
+namespace pixel {
 
 	RgbaImage::RgbaImage() = default;
 
@@ -16,34 +16,35 @@ namespace td::tip {
 		Resize(size);
 	}
 
+	// This is probably trivial.
+	RgbaImage::RgbaImage(RgbaImage&& movee) noexcept {
+		pixels = std::move(movee.pixels);
+		size = std::move(movee.size);
+	}
+
 	void RgbaImage::Resize(ImageSize sz) {
 		// Clear any remaining image.
-		if(!pixels.empty())
+		if(pixels)
 			Clear();
 
-		pixels.resize(sz.width * sz.height);
+		// if only i could use make_shared...
+		pixels.reset(new RgbaColor[sz.width * sz.height]);
 		size = sz;
 	}
 
 	void RgbaImage::Clear() {
-		if(!pixels.empty()) {
-			pixels.clear();
+		if(!pixels) {
+			pixels.reset();
 			size = { 0, 0 };
 		}
 	}
 
 	const RgbaColor* RgbaImage::GetBuffer() const {
-		if(pixels.empty())
-			return nullptr;
-
-		return pixels.data();
+		return pixels.get();
 	}
 
 	RgbaColor* RgbaImage::GetBuffer() {
-		if(pixels.empty())
-			return nullptr;
-
-		return pixels.data();
+		return pixels.get();
 	}
 
 	std::size_t RgbaImage::GetStride() const {

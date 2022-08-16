@@ -6,16 +6,17 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 //
 
-#ifndef TIPDUMP_RGBAIMAGE_H
-#define TIPDUMP_RGBAIMAGE_H
+#ifndef LIBPIXEL_RGBAIMAGE_H
+#define LIBPIXEL_RGBAIMAGE_H
 
 #include <cstdint>
-#include <vector>
+#include <memory>
 
-namespace td::tip {
+namespace pixel {
 
 	/**
 	 * Simple image size structure.
+	 * Pass by value.
 	 */
 	struct ImageSize {
 		std::uint16_t width {};
@@ -23,7 +24,7 @@ namespace td::tip {
 	};
 
 	/**
-	 * A RGBA color.
+	 * A RGBA8888 color.
 	 */
 	union RgbaColor {
 		std::uint32_t u32 {};
@@ -43,12 +44,21 @@ namespace td::tip {
 	struct RgbaImage {
 		RgbaImage();
 
+		// Technically it's a postcondition that the object not be used after destruction,
+		// so unique_ptr default delete behaviour works just fine.
+		//~RgbaImage();
+
 		/**
 		 * Constructor taking in an image size.
-		 * Shorthand for Resize(size).
+		 * Shorthand for creating an image and then doing Resize(size).
 		 * \see RgbaImage::Resize
 		 */
 		explicit RgbaImage(ImageSize size);
+
+		// Shouldn't copy.
+		RgbaImage(const RgbaImage&) = delete;
+
+		RgbaImage(RgbaImage&& movee) noexcept;
 
 		/**
 		 * Resize this image.
@@ -85,9 +95,17 @@ namespace td::tip {
 		 */
 		[[nodiscard]] ImageSize GetSize() const;
 
+		// TODO: Add these methods, to make sampling data a bit nicer.
+		//
+		// static RgbaImage From4Bpp(span<std::uint8_t> data, span<RgbaColor> palette, ImageSize size);
+		// static RgbaImage From8Bpp(span<std::uint8_t> data, span<RgbaColor> palette, ImageSize size);
+		// static RgbaImage From16Bpp(span<std::uint8_t> data, ImageSize size);
+		// static RgbaImage From32Bpp(span<std::uint8_t> data, ImageSize size);
+
+
 	   private:
 		ImageSize size {};
-		std::vector<RgbaColor> pixels;
+		std::unique_ptr<RgbaColor[]> pixels;
 	};
 
 } // namespace td::tip

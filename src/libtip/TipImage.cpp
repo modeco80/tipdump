@@ -49,7 +49,7 @@ namespace td::tip {
 			clutBytes.clear();
 	}
 
-	ImageSize TipImage::Size() const {
+	pixel::ImageSize TipImage::Size() const {
 		return {
 			// For some reason, depending on the BPP of the image, width needs to be multiplied by:
 			// 8bpp : 2
@@ -61,11 +61,17 @@ namespace td::tip {
 		};
 	}
 
-	RgbaImage TipImage::ToRgba() {
+	pixel::RgbaImage TipImage::ToRgba() {
 		auto size = Size();
 		auto* pal = Palette().data();
-		RgbaImage img(size);
+		pixel::RgbaImage img(size);
 		auto* buffer = img.GetBuffer();
+
+		// when API implemented in libpixel, replace this with
+		// if(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP)
+		// 		return pixel::RgbaImage::From8Bpp(imageBytes.data(), Palette().Data(), Size);
+		// else
+		// 		return pixel::RgbaImage::From4Bpp(imageBytes.data(), Palette().Data(), Size);
 
 		if(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP) {
 			for(std::size_t i = 0; i < size.width * size.height; ++i)
@@ -77,10 +83,13 @@ namespace td::tip {
 					*(buffer++) = pal[static_cast<std::uint16_t>(((imageBytes[i] & (0x0F << (b * 4))) >> (b * 4)))];
 		}
 
+		// It might be tempting to place a std::move() here, but that inhibits RVO, which will itself
+		// avoid a call to the copy constructor.
+		// There's no real failure case, so we're cool.
 		return img;
 	}
 
-	const std::vector<RgbaColor>& TipImage::Palette() {
+	const std::vector<pixel::RgbaColor>& TipImage::Palette() {
 		// Lazily compute if we haven't computed the palette.
 
 		if(!paletteComputed) {

@@ -9,16 +9,14 @@
 #ifndef TIPDUMP_TIPIMAGE_H
 #define TIPDUMP_TIPIMAGE_H
 
+#include <pixel/RgbaImage.h>
 #include <tip/TipStructures.h>
-#include <tip/RgbaImage.h>
 
 #include <cstdint>
 #include <iosfwd>
 #include <vector>
 
 namespace td::tip {
-
-
 
 	struct TipImage {
 		/**
@@ -37,14 +35,14 @@ namespace td::tip {
 		/**
 		 * Get this image's size.
 		 */
-		ImageSize Size() const;
+		[[nodiscard]] pixel::ImageSize Size() const;
 
 		/**
 		 * Convert this image to a RGBA8888 image.
 		 *
 		 * \return a RgbaImage containing a plain-format RGBA8888 bitmap.
 		 */
-		RgbaImage ToRgba();
+		[[nodiscard]] pixel::RgbaImage ToRgba();
 
 		/**
 		 * Get the palette of this image, as an array of RGBA8888 colors.
@@ -54,33 +52,37 @@ namespace td::tip {
 		 *
 		 * \return a 1D palette array.
 		 */
-		const std::vector<RgbaColor>& Palette();
+		[[nodiscard]] const std::vector<pixel::RgbaColor>& Palette();
 
 		/**
 		 * RgbaImage index.
 		 */
-		uint16_t Index() const;
+		[[nodiscard]] uint16_t Index() const;
 
 		/**
 		 * Get the raw image header.
 		 */
-		const TipImageHdr& Header() const;
+		[[nodiscard]] const TipImageHdr& Header() const;
 
 		/**
 		 * Get whether this image is 8bpp or not.
 		 */
-		bool Is8Bpp() const;
-
+		[[nodiscard]] bool Is8Bpp() const;
 
 	   private:
 		TipImageHdr imageHeader;
 		TipImageHdr clutHeader;
 
+		// make these unique_ptr<T[]>, probably,
+		// since we don't need vector dynamic resize
+		// *or* value initialization.
+
 		std::vector<std::uint8_t> imageBytes;
 		std::vector<std::uint8_t> clutBytes;
 
-		std::vector<RgbaColor> palette; // TODO: use a 256/16*1 RgbaImage?
-		bool paletteComputed{false};
+		std::vector<pixel::RgbaColor> palette; // TODO: use a 256/16*1 RgbaImage?
+											   // what about a array<RgbaColor, 256>? It'd be bigger but no crazy hot path allocs
+		bool paletteComputed { false };
 	};
 
 } // namespace td::tip

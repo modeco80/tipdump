@@ -9,5 +9,7 @@ include(cmake/Policies.cmake)
 
 project(tipdump)
 
+add_subdirectory(src/pixel)
+
 add_subdirectory(src/libtip)
 add_subdirectory(src/tipdump)
