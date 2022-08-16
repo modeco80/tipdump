@@ -15,8 +15,9 @@ Start address option is useful for extracting from Vol. 3 .DAT files, for instan
 
 ### Requirements
 
- - A C++20 compiler
- - CMake
+- This repository (cloned with `--recursive`, or manually initialized submodules.)
+- A C++20 compiler
+- CMake
 
 To build:
 
@@ -31,4 +32,5 @@ Profit?
 
 - Vol. 1 `MUSEUM/LOB.TIP` and some stuff in `/DISPLAY` is wonky with libtip
 
-  This is due to the CLUT order being very screwy in particularly those TIP file only, and the first image not even having a CLUT in the first place..
+  This is due to the CLUT order being very screwy in particularly those TIP file only, 
+  and the first image not even having a CLUT in the first place.. Some others do this too. I don't know why.

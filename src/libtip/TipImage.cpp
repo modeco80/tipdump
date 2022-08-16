@@ -59,38 +59,25 @@ namespace td::tip {
 	}
 
 	pixel::RgbaImage TipImage::ToRgba() {
-		const auto size = Size();
-		pixel::RgbaImage img(size);
-		const auto* pal = Palette().data();
-		auto* buffer = img.GetBuffer();
-
-		// when API implemented in libpixel, replace this with
-		// if(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP)
-		// 		return pixel::RgbaImage::From8Bpp(imageBytes.data(), Palette().Data(), Size);
-		// else
-		// 		return pixel::RgbaImage::From4Bpp(imageBytes.data(), Palette().Data(), Size);
-
-		if(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP) {
-			for(std::size_t i = 0; i < size.width * size.height; ++i)
-				*(buffer++) = pal[imageBytes[i]];
-		} else {
-			// Sample as 4bpp.
-			for(std::size_t i = 0; i < (size.width * size.height / 2); ++i)
-				for(std::size_t b = 0; b < 2; b++)
-					*(buffer++) = pal[static_cast<std::uint16_t>(((imageBytes[i] & (0x0F << (b * 4))) >> (b * 4)))];
-		}
-
-		// It might be tempting to place a std::move() here, but that inhibits RVO, which will itself
-		// avoid a call to the copy constructor.
-		// There's no real failure case, so we're cool.
-		return img;
+		 if(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP)
+		 		return pixel::RgbaImage::From8Bpp(imageBytes.get(), Palette().data(), Size());
+		 else
+		 		return pixel::RgbaImage::From4Bpp(imageBytes.get(), Palette().data(), Size());
 	}
 
 	const std::array<pixel::RgbaColor, 256>& TipImage::Palette() {
 		// Lazily compute if we haven't computed the palette.
 		if(!paletteComputed) {
-			const auto count = (imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP) ? 256 : 16;
 
+			if(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP)
+				pixel::RgbaColor::PaletteFrom16Bpp(&palette[0], clutBytes.get(), 256);
+			else
+				pixel::RgbaColor::PaletteFrom16Bpp(&palette[0], clutBytes.get(), 16);
+
+			// Sample the palette again for "working alpha".
+			// Grody, but it works, so...
+
+			const auto count = (imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP) ? 256 : 16;
 			for(int i = 0; i < count; ++i) {
 				const auto paletteIndex = i * sizeof(std::uint16_t);
 				std::uint16_t total = (clutBytes[paletteIndex + 1] << 8) | clutBytes[paletteIndex];
@@ -98,22 +85,6 @@ namespace td::tip {
 				// PS1 GPU considers all black (0x0000) completely transparent.
 				if(total == 0x0000)
 					palette[i].a = 0;
-				else
-					// This is where things potentially get a bit more complicated.
-					//
-					// In theory, we would need to test for the semi-transparent bit
-					// (see https://psx-spx.consoledev.net/graphicsprocessingunitgpu/#texture-bitmaps and
-					// https://psx-spx.consoledev.net/graphicsprocessingunitgpu/#texture-palettes-clut-color-lookup-table)
-					//
-					// but that doesn't seem like it matters too much (and any attempt to
-					// test for it breaks all other images, so for now we don't).
-					palette[i].a = 255;
-
-				palette[i].b = (total & 0x7C00) >> 7;
-				palette[i].g = (total & 0x03E0) >> 2;
-				palette[i].r = (total & 0x001F) << 3;
-
-				// std::cout << "color " << i << ": " << (int)color.r << ',' << (int)color.g << ',' << (int)color.b << '\n';
 			}
 
 			paletteComputed = true;
