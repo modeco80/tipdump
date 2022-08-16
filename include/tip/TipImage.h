@@ -12,6 +12,7 @@
 #include <pixel/RgbaImage.h>
 #include <tip/TipStructures.h>
 
+#include <array>
 #include <cstdint>
 #include <iosfwd>
 #include <vector>
@@ -52,7 +53,7 @@ namespace td::tip {
 		 *
 		 * \return a 1D palette array.
 		 */
-		[[nodiscard]] const std::vector<pixel::RgbaColor>& Palette();
+		[[nodiscard]] const std::array<pixel::RgbaColor, 256>& Palette();
 
 		/**
 		 * RgbaImage index.
@@ -73,15 +74,10 @@ namespace td::tip {
 		TipImageHdr imageHeader;
 		TipImageHdr clutHeader;
 
-		// make these unique_ptr<T[]>, probably,
-		// since we don't need vector dynamic resize
-		// *or* value initialization.
+		std::unique_ptr<std::uint8_t[]> imageBytes;
+		std::unique_ptr<std::uint8_t[]> clutBytes;
 
-		std::vector<std::uint8_t> imageBytes;
-		std::vector<std::uint8_t> clutBytes;
-
-		std::vector<pixel::RgbaColor> palette; // TODO: use a 256/16*1 RgbaImage?
-											   // what about a array<RgbaColor, 256>? It'd be bigger but no crazy hot path allocs
+		std::array<pixel::RgbaColor, 256> palette;
 		bool paletteComputed { false };
 	};
 

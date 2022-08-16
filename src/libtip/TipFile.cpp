@@ -28,7 +28,7 @@ namespace td::tip {
 			if(!image.ReadFromStream(is))
 				return TipReadError::FailureReadingImage;
 
-			images.push_back(image);
+			images.emplace_back(std::move(image));
 		}
 
 		return TipReadError::NoError;

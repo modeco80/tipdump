@@ -18,8 +18,8 @@ namespace td::tip {
 			return false;
 
 		// RgbaImage data
-		imageBytes.resize(imageHeader.ImageDataSize());
-		if(!is.read(reinterpret_cast<char*>(&imageBytes[0]), imageHeader.ImageDataSize()))
+		imageBytes.reset(new std::uint8_t[imageHeader.ImageDataSize()]);
+		if(!is.read(reinterpret_cast<char*>(imageBytes.get()), imageHeader.ImageDataSize()))
 			return false;
 
 		// Then the CLUT image
@@ -30,8 +30,8 @@ namespace td::tip {
 			return false;
 
 		// CLUT data
-		clutBytes.resize(clutHeader.ImageDataSize());
-		if(!is.read(reinterpret_cast<char*>(&clutBytes[0]), clutHeader.ImageDataSize()))
+		clutBytes.reset(new std::uint8_t[clutHeader.ImageDataSize()]);
+		if(!is.read(reinterpret_cast<char*>(clutBytes.get()), clutHeader.ImageDataSize()))
 			return false;
 
 		// done!
@@ -39,14 +39,11 @@ namespace td::tip {
 	}
 
 	void TipImage::Clear() {
-		if(paletteComputed)
-			palette.clear();
+		if(imageBytes)
+			imageBytes.reset();
 
-		if(!imageBytes.empty())
-			imageBytes.clear();
-
-		if(!clutBytes.empty())
-			clutBytes.clear();
+		if(clutBytes)
+			clutBytes.reset();
 	}
 
 	pixel::ImageSize TipImage::Size() const {
@@ -89,26 +86,31 @@ namespace td::tip {
 		return img;
 	}
 
-	const std::vector<pixel::RgbaColor>& TipImage::Palette() {
+	const std::array<pixel::RgbaColor, 256>& TipImage::Palette() {
 		// Lazily compute if we haven't computed the palette.
 
 		if(!paletteComputed) {
-			palette.resize(imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP ? 256 : 16);
-
-			std::size_t i = 0;
 
 			// std::cout << "clut's at " << clutHeader.ImageRect.x << 'x' << clutHeader.ImageRect.y << '\n';
 
+			auto count = (imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP) ? 256 : 16;
+			std::size_t i{};
+
 			for(auto& color : palette) {
+				// this is awful, but the loop only works like this.
+				// TODO: Try refactoring so I can just use a typical for loop.
+				if(i / sizeof(std::uint16_t) == count)
+					break;
+
 				std::uint16_t total = (clutBytes[i + 1] << 8) | clutBytes[i];
 
 				// PS1 GPU considers all black (0x0000) completely transparent.
 				if(total == 0x0000)
 					color.a = 0;
 				else
-					// This is where things potentionally get a bit more complicated.
+					// This is where things potentially get a bit more complicated.
 					//
-					// In theory we would need to test for the semi-transparent bit
+					// In theory, we would need to test for the semi-transparent bit
 					// (see https://psx-spx.consoledev.net/graphicsprocessingunitgpu/#texture-bitmaps and
 					// https://psx-spx.consoledev.net/graphicsprocessingunitgpu/#texture-palettes-clut-color-lookup-table)
 					//
@@ -121,8 +123,7 @@ namespace td::tip {
 				color.r = (total & 0x001F) << 3;
 
 				// std::cout << "color " << i / 2 << ": " << (int)color.r << ',' << (int)color.g << ',' << (int)color.b << '\n';
-
-				i += sizeof(std::uint16_t); // The color is 16 bits, 2 bytes per color.
+				i += sizeof(std::uint16_t);
 			}
 
 			paletteComputed = true;
