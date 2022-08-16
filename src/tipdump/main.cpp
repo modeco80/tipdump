@@ -116,16 +116,7 @@ int main(int argc, char** argv) {
 
 	for(auto& image : file.GetImages()) {
 		auto rgba = image.ToRgba();
-
 		writer.SetImage(rgba);
-
-		// If this provides a performance advantage I'll re-enable this
-		// but it just seems like a memory tradeoff to me /shrug
-#if 0
-		// Free the TIP image resources, since we don't need it after it's been converted to an
-		// RGBA image.
-		image.Clear();
-#endif
 
 		auto outName = (outputDir / CheapFormat("%d.png", image.Index() / 2));
 
@@ -133,7 +124,7 @@ int main(int argc, char** argv) {
 		{
 			auto& header = image.Header();
 			auto rect = image.Size();
-			const auto clutLen = image.Is8Bpp() ? 255 * sizeof(std::uint16_t) : 16 * sizeof(std::uint16_t);
+			const auto clutLen = image.Is8Bpp() ? 256 * sizeof(std::uint16_t) : 16 * sizeof(std::uint16_t);
 
 			statFile << CheapFormat("Image #%d:\n", image.Index() / 2);
 			statFile << CheapFormat("    Bitdepth: %s\n", image.Is8Bpp() ? "8bpp" : "4bpp");
