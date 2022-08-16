@@ -59,9 +59,9 @@ namespace td::tip {
 	}
 
 	pixel::RgbaImage TipImage::ToRgba() {
-		auto size = Size();
-		auto* pal = Palette().data();
+		const auto size = Size();
 		pixel::RgbaImage img(size);
+		const auto* pal = Palette().data();
 		auto* buffer = img.GetBuffer();
 
 		// when API implemented in libpixel, replace this with
@@ -88,25 +88,16 @@ namespace td::tip {
 
 	const std::array<pixel::RgbaColor, 256>& TipImage::Palette() {
 		// Lazily compute if we haven't computed the palette.
-
 		if(!paletteComputed) {
+			const auto count = (imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP) ? 256 : 16;
 
-			// std::cout << "clut's at " << clutHeader.ImageRect.x << 'x' << clutHeader.ImageRect.y << '\n';
-
-			auto count = (imageHeader.ImageFlags & TipImageHdr::IMAGEFLAG_8BPP) ? 256 : 16;
-			std::size_t i{};
-
-			for(auto& color : palette) {
-				// this is awful, but the loop only works like this.
-				// TODO: Try refactoring so I can just use a typical for loop.
-				if(i / sizeof(std::uint16_t) == count)
-					break;
-
-				std::uint16_t total = (clutBytes[i + 1] << 8) | clutBytes[i];
+			for(int i = 0; i < count; ++i) {
+				const auto paletteIndex = i * sizeof(std::uint16_t);
+				std::uint16_t total = (clutBytes[paletteIndex + 1] << 8) | clutBytes[paletteIndex];
 
 				// PS1 GPU considers all black (0x0000) completely transparent.
 				if(total == 0x0000)
-					color.a = 0;
+					palette[i].a = 0;
 				else
 					// This is where things potentially get a bit more complicated.
 					//
@@ -116,14 +107,13 @@ namespace td::tip {
 					//
 					// but that doesn't seem like it matters too much (and any attempt to
 					// test for it breaks all other images, so for now we don't).
-					color.a = 255;
+					palette[i].a = 255;
 
-				color.b = (total & 0x7C00) >> 7;
-				color.g = (total & 0x03E0) >> 2;
-				color.r = (total & 0x001F) << 3;
+				palette[i].b = (total & 0x7C00) >> 7;
+				palette[i].g = (total & 0x03E0) >> 2;
+				palette[i].r = (total & 0x001F) << 3;
 
-				// std::cout << "color " << i / 2 << ": " << (int)color.r << ',' << (int)color.g << ',' << (int)color.b << '\n';
-				i += sizeof(std::uint16_t);
+				// std::cout << "color " << i << ": " << (int)color.r << ',' << (int)color.g << ',' << (int)color.b << '\n';
 			}
 
 			paletteComputed = true;
