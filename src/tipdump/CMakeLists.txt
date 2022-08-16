@@ -1,5 +1,4 @@
 add_executable(tipdump
-		stb_impl.cpp
 		main.cpp
 		)
 

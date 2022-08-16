@@ -9,6 +9,8 @@
 #ifndef LIBPIXEL_RGBAIMAGE_H
 #define LIBPIXEL_RGBAIMAGE_H
 
+#include <pixel/RgbaColor.h>
+
 #include <cstdint>
 #include <memory>
 
@@ -21,21 +23,6 @@ namespace pixel {
 	struct ImageSize {
 		std::uint16_t width {};
 		std::uint16_t height {};
-	};
-
-	/**
-	 * A RGBA8888 color.
-	 */
-	union RgbaColor {
-		std::uint32_t u32 {};
-
-		// Color component accessor.
-		struct {
-			std::uint8_t r;
-			std::uint8_t g;
-			std::uint8_t b;
-			std::uint8_t a;
-		};
 	};
 
 	/**
@@ -102,12 +89,11 @@ namespace pixel {
 		// static RgbaImage From16Bpp(span<std::uint8_t> data, ImageSize size);
 		// static RgbaImage From32Bpp(span<std::uint8_t> data, ImageSize size);
 
-
 	   private:
 		ImageSize size {};
 		std::unique_ptr<RgbaColor[]> pixels;
 	};
 
-} // namespace td::tip
+} // namespace pixel
 
 #endif // TIPDUMP_RGBAIMAGE_H

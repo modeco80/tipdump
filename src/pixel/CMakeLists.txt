@@ -1,7 +1,10 @@
 
 
 add_library(pixel_libpixel
+		stb_impl.cpp
+
 		RgbaImage.cpp
+		ImageWriter.cpp
 		)
 
 target_include_directories(pixel_libpixel PUBLIC ${PROJECT_SOURCE_DIR}/include)

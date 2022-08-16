@@ -6,13 +6,12 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 //
 
+#include <pixel/ImageWriter.h>
 #include <tip/TipFile.h>
 
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-
-#include "stb_image_write.h"
 
 namespace fs = std::filesystem;
 
@@ -87,12 +86,12 @@ int main(int argc, char** argv) {
 	// refactor below code into a object probably.
 
 	td::tip::TipFile file;
+	pixel::ImageWriter writer {};
 
 	if(auto res = file.ReadFromStream(ifs); res != td::tip::TipReadError::NoError) {
 		std::cout << CheapFormat("Error: Could not read TIP file: %s\n", td::tip::TipReadErrorToString(res));
 		return 1;
 	}
-
 
 	auto outputDir = path.remove_filename() / CheapFormat("%s", path.stem().c_str());
 
@@ -118,9 +117,15 @@ int main(int argc, char** argv) {
 	for(auto& image : file.GetImages()) {
 		auto rgba = image.ToRgba();
 
+		writer.SetImage(rgba);
+
+		// If this provides a performance advantage I'll re-enable this
+		// but it just seems like a memory tradeoff to me /shrug
+#if 0
 		// Free the TIP image resources, since we don't need it after it's been converted to an
 		// RGBA image.
 		image.Clear();
+#endif
 
 		auto outName = (outputDir / CheapFormat("%d.png", image.Index() / 2));
 
@@ -128,10 +133,10 @@ int main(int argc, char** argv) {
 		{
 			auto& header = image.Header();
 			auto rect = image.Size();
-			const auto clutLen = image.Is8Bpp()  ? 255 * sizeof(std::uint16_t) : 16 * sizeof(std::uint16_t);
+			const auto clutLen = image.Is8Bpp() ? 255 * sizeof(std::uint16_t) : 16 * sizeof(std::uint16_t);
 
 			statFile << CheapFormat("Image #%d:\n", image.Index() / 2);
-			statFile << CheapFormat("    Bitdepth: %s\n", image.Is8Bpp() ? "8bpp" : "4bpp" );
+			statFile << CheapFormat("    Bitdepth: %s\n", image.Is8Bpp() ? "8bpp" : "4bpp");
 			statFile << CheapFormat("    VRAM Rect: %dx%d (at %dx%d)\n", rect.width, rect.height, header.ImageRect.x, header.ImageRect.y);
 			statFile << CheapFormat("    Data size: %u (0x%08x hex)\n", header.ImageDataSize(), header.ImageDataSize());
 			statFile << CheapFormat("    CLUT data size: %u (0x%08x hex)\n\n", clutLen, clutLen);
@@ -139,9 +144,7 @@ int main(int argc, char** argv) {
 
 		std::cout << "Writing image " << image.Index() / 2 << " to path " << std::quoted(outName.string()) << '\n';
 
-		// FIXME: Add to libpixel interface.
-
-		stbi_write_png(outName.c_str(), rgba.GetSize().width, rgba.GetSize().height, 4, rgba.GetBuffer(), rgba.GetStride());
+		writer.WritePng(outName);
 	}
 
 	return 0;
